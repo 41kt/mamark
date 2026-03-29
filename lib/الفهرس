@@ -1,0 +1,56 @@
+lib/
+├── main.dart
+├── core/
+│   ├── constants/
+│   │   ├── app_colors.dart
+│   │   ├── app_strings.dart
+│   │   └── app_images.dart
+│   ├── themes/
+│   │   ├── light_theme.dart
+│   │   └── dark_theme.dart
+│   └── utils/
+│       ├── validators.dart
+│       └── helpers.dart
+├── models/
+│   ├── user_model.dart
+│   ├── product_model.dart
+│   ├── order_model.dart
+│   ├── store_model.dart
+│   └── review_model.dart
+├── services/
+│   ├── auth_service.dart
+│   ├── database_service.dart
+│   ├── storage_service.dart
+│   └── notification_service.dart
+├── providers/
+│   ├── auth_provider.dart
+│   ├── cart_provider.dart
+│   ├── product_provider.dart
+│   └── order_provider.dart
+├── screens/
+│   ├── splash/
+│   │   └── splash_screen.dart
+│   ├── auth/
+│   │   ├── login_screen.dart
+│   │   ├── register_screen.dart
+│   │   └── choose_role_screen.dart
+│   ├── customer/
+│   │   ├── home_screen.dart
+│   │   ├── product_details_screen.dart
+│   │   ├── cart_screen.dart
+│   │   └── orders_screen.dart
+│   ├── supplier/
+│   │   ├── supplier_dashboard.dart
+│   │   ├── add_product_screen.dart
+│   │   ├── edit_product_screen.dart
+│   │   ├── inventory_screen.dart
+│   │   └── supplier_orders_screen.dart
+│   └── shared/
+│       ├── store_screen.dart
+│       └── search_screen.dart
+└── widgets/
+    ├── custom_button.dart
+    ├── product_card.dart
+    ├── store_card.dart
+    ├── rating_stars.dart
+    └── loading_widget.dart
