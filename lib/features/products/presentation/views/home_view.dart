@@ -15,23 +15,22 @@ class HomeView extends StatelessWidget {
     final cartController = Get.find<CartController>();
     final authController = Get.find<AuthController>();
     final notificationController = Get.find<NotificationController>();
-
-    final allCategories = ['الكل', ...productController.categories];
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       body: CustomScrollView(
         slivers: [
-          // Premium SliverAppBar
+          // ── Premium SliverAppBar ──
           SliverAppBar(
             expandedHeight: 120.0,
             floating: true,
             pinned: true,
             elevation: 0,
-            backgroundColor: Colors.blue[900],
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text('مامارك للمواد', 
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20)),
+              title: const Text(
+                'معمارك للمواد',
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
+              ),
               centerTitle: false,
               titlePadding: const EdgeInsetsDirectional.only(start: 20, bottom: 16),
               background: Container(
@@ -49,6 +48,7 @@ class HomeView extends StatelessWidget {
                 icon: const Icon(Icons.search, color: Colors.white),
                 onPressed: () {},
               ),
+              // Notification badge — only the count itself is reactive
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -56,20 +56,22 @@ class HomeView extends StatelessWidget {
                     icon: const Icon(Icons.notifications_none, color: Colors.white),
                     onPressed: () => Get.toNamed('/notifications'),
                   ),
-                  Obx(() => notificationController.newOrdersCount.value > 0
-                      ? Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                            child: Text(
-                              '${notificationController.newOrdersCount.value}',
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink()),
+                  Obx(() {
+                    final count = notificationController.newOrdersCount.value;
+                    if (count == 0) return const SizedBox.shrink();
+                    return Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                        child: Text(
+                          '$count',
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    );
+                  }),
                 ],
               ),
               IconButton(
@@ -81,7 +83,7 @@ class HomeView extends StatelessWidget {
                   } else if (user.role == 'supplier') {
                     Get.toNamed('/supplier-profile');
                   } else {
-                    Get.toNamed('/profile');
+                    Get.toNamed('/edit-profile');
                   }
                 },
               ),
@@ -93,61 +95,78 @@ class HomeView extends StatelessWidget {
             ],
           ),
 
-          // Sticky Category Header
+          // ── Sticky Category Bar ──
           SliverPersistentHeader(
             pinned: true,
-            delegate: _SliverAppBarDelegate(
-              minHeight: 70,
-              maxHeight: 70,
-              child: Container(
-                color: Colors.grey[50],
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Obx(() => ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: allCategories.length,
-                  itemBuilder: (context, index) {
-                    final category = allCategories[index];
-                    final isSelected = productController.selectedCategory.value == category;
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: ChoiceChip(
-                        label: Text(category),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) productController.filterByCategory(category);
-                        },
-                        selectedColor: Colors.blue[800],
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black87,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            delegate: _CategoryBarDelegate(
+              child: Obx(() {
+                // Reading selectedCategory.value makes this Obx reactive
+                final selected = productController.selectedCategory.value;
+                final categories = ['الكل', ...productController.categories];
+                return Container(
+                  color: theme.scaffoldBackgroundColor,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final cat = categories[index];
+                      final isSelected = selected == cat;
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: ChoiceChip(
+                          label: Text(cat),
+                          selected: isSelected,
+                          onSelected: (ok) {
+                            if (ok) productController.filterByCategory(cat);
+                          },
+                          selectedColor: Colors.blue[800],
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.white : theme.textTheme.bodyMedium?.color,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          elevation: isSelected ? 4 : 0,
+                          pressElevation: 8,
                         ),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        elevation: isSelected ? 4 : 0,
-                        pressElevation: 8,
-                      ),
-                    );
-                  },
-                )),
-              ),
+                      );
+                    },
+                  ),
+                );
+              }),
             ),
           ),
 
-          // Product Grid
+          // ── Product Grid ──
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: Obx(() {
               if (productController.isLoading.value) {
-                return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
+                return const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                );
               }
+
               final user = authController.currentUser.value;
-              final productsToShow = (user?.role == 'supplier' && !authController.isViewAsCustomer.value)
-                  ? productController.myProducts
-                  : productController.products;
+              final isSupplierMode =
+                  user?.role == 'supplier' && !authController.isViewAsCustomer.value;
+              final productsToShow =
+                  isSupplierMode ? productController.myProducts : productController.products;
 
               if (productsToShow.isEmpty) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('لا توجد منتجات لعرضها حالياً')),
+                return SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[300]),
+                        const SizedBox(height: 16),
+                        Text('no_products'.tr,
+                            style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                      ],
+                    ),
+                  ),
                 );
               }
 
@@ -156,15 +175,15 @@ class HomeView extends StatelessWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 0.75,
+                  childAspectRatio: 0.72,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final product = productsToShow[index];
                     return ProductCard(
                       product: product,
-                      isSupplier: user?.role == 'supplier' && !authController.isViewAsCustomer.value,
-                      onEdit: (user?.role == 'supplier' && !authController.isViewAsCustomer.value) 
+                      isSupplier: isSupplierMode,
+                      onEdit: isSupplierMode
                           ? () => Get.toNamed('/add-product', arguments: product)
                           : null,
                       onAddToCart: () => cartController.addItem(product.id),
@@ -175,9 +194,12 @@ class HomeView extends StatelessWidget {
               );
             }),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 80)),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
+
+      // ── Cart FAB ──
       floatingActionButton: FloatingActionButton(
         onPressed: () => Get.toNamed('/cart'),
         backgroundColor: Colors.blue[900],
@@ -185,22 +207,25 @@ class HomeView extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             const Icon(Icons.shopping_cart, color: Colors.white),
-            Obx(() => cartController.cartItems.isNotEmpty
-                ? Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        '${cartController.cartItems.length}',
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink()),
+            Obx(() {
+              final count = cartController.cartItems.length;
+              if (count == 0) return const SizedBox.shrink();
+              return Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }),
           ],
         ),
       ),
@@ -208,30 +233,20 @@ class HomeView extends StatelessWidget {
   }
 }
 
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverAppBarDelegate({
-    required this.minHeight,
-    required this.maxHeight,
-    required this.child,
-  });
-  final double minHeight;
-  final double maxHeight;
+// ── Sliver Header Delegate ──
+class _CategoryBarDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
+  const _CategoryBarDelegate({required this.child});
 
   @override
-  double get minExtent => minHeight;
+  double get minExtent => 70;
   @override
-  double get maxExtent => maxHeight;
+  double get maxExtent => 70;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return SizedBox.expand(child: child);
-  }
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) =>
+      SizedBox.expand(child: child);
 
   @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return maxHeight != oldDelegate.maxHeight ||
-        minHeight != oldDelegate.minHeight ||
-        child != oldDelegate.child;
-  }
+  bool shouldRebuild(_CategoryBarDelegate old) => child != old.child;
 }

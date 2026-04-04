@@ -52,8 +52,8 @@ class ProductController extends GetxController {
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
       final path = 'product_images/$fileName'; // Using a more specific folder
       
-      await supabase.storage.from('products').upload(path, image);
-      final publicUrl = supabase.storage.from('products').getPublicUrl(path);
+      await supabase.storage.from('MY_IMAGE').upload(path, image);
+      final publicUrl = supabase.storage.from('MY_IMAGE').getPublicUrl(path);
       return publicUrl;
     } catch (e) {
       Get.snackbar('خطأ في الرفع', 'تعذر رفع الصورة: $e\nتأكد من وجود سلة (bucket) باسم products في Supabase ووجود صلاحيات الرفع.');

@@ -111,7 +111,7 @@ class OrdersView extends StatelessWidget {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                               ),
-                              child: const Text('قبول الطلب', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              child: Text('accept_order'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -123,26 +123,46 @@ class OrdersView extends StatelessWidget {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                               ),
-                              child: const Text('رفض', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                              child: Text('reject_order'.tr, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  if (isSupplier && order.status == 'accepted')
+                  // Chat button for accepted orders
+                  if (order.status == 'accepted')
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: ElevatedButton.icon(
-                        onPressed: () => orderController.updateStatus(order.id, 'delivered'),
-                        icon: const Icon(Icons.local_shipping_outlined, color: Colors.white),
-                        label: const Text('تأكيد التوصيل للمشتري', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[800],
-                          minimumSize: const Size.fromHeight(55),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: Column(
+                        children: [
+                          if (isSupplier)
+                            ElevatedButton.icon(
+                              onPressed: () => orderController.updateStatus(order.id, 'delivered'),
+                              icon: const Icon(Icons.local_shipping_outlined, color: Colors.white),
+                              label: Text('confirm_delivery'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue[800],
+                                minimumSize: const Size.fromHeight(50),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: () => Get.toNamed('/chat', arguments: {
+                              'orderId': order.id,
+                              'isSupplier': isSupplier,
+                            }),
+                            icon: const Icon(Icons.chat_bubble_outline),
+                            label: Text('open_chat'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(50),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+
                 ],
               ),
             );

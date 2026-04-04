@@ -14,7 +14,7 @@ class OrderModel extends OrderEntity {
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
       id: json['id'],
-      userId: json['user_id'],
+      userId: json['customer_id'],
       supplierId: json['supplier_id'],
       items: List<Map<String, dynamic>>.from(json['items']),
       totalAmount: (json['total_amount'] as num).toDouble(),
@@ -25,7 +25,7 @@ class OrderModel extends OrderEntity {
 
   Map<String, dynamic> toJson() {
     return {
-      'user_id': userId,
+      'customer_id': userId,
       'supplier_id': supplierId,
       'items': items,
       'total_amount': totalAmount,

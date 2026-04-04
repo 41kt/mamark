@@ -62,7 +62,7 @@ class SettingsView extends StatelessWidget {
             ]),
             _buildSettingsGroup('الدعم والقانونية', [
               _buildSettingItem(
-                title: 'عن مامارك',
+                title: 'عن معمارك',
                 icon: Icons.info_outline,
                 iconColor: Colors.grey,
                 onTap: () {},

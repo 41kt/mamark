@@ -21,7 +21,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       if (isSupplier) {
         query.eq('supplier_id', userId);
       } else {
-        query.eq('user_id', userId);
+        query.eq('customer_id', userId);
       }
       
       final response = await query.order('created_at', ascending: false);
