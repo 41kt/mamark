@@ -23,11 +23,23 @@ class OrderController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    refreshOrders();
     final authController = Get.find<AuthController>();
+    ever(authController.currentUser, (user) {
+      if (user != null) {
+        refreshOrders();
+        if (user.role == 'supplier') {
+          _listenToOrders(user.id);
+        }
+      }
+    });
+    
+    // Initial check in case it's already there
     final user = authController.currentUser.value;
-    if (user != null && user.role == 'supplier') {
-      _listenToOrders(user.id);
+    if (user != null) {
+      refreshOrders();
+      if (user.role == 'supplier') {
+        _listenToOrders(user.id);
+      }
     }
   }
 
@@ -43,8 +55,12 @@ class OrderController extends GetxController {
     isLoading.value = true;
     final result = await getOrdersUseCase(GetOrdersParams(userId: userId, isSupplier: isSupplier));
     result.fold(
-      (failure) => Get.snackbar('خطأ', 'فشل في تحميل الطلبات'),
-      (items) => orders.assignAll(items),
+      (failure) {
+        Get.snackbar('خطأ تقني', 'الخطأ: \${failure.message}', duration: const Duration(seconds: 10));
+      },
+      (items) {
+        orders.assignAll(items);
+      },
     );
     isLoading.value = false;
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/notification_controller.dart';
+import 'package:mamark/features/orders/presentation/controllers/order_controller.dart';
+import 'package:mamark/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:intl/intl.dart';
 
 class NotificationListView extends StatelessWidget {
@@ -8,21 +9,35 @@ class NotificationListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final notificationController = Get.find<NotificationController>();
+    // We will just use the orders already fetched by OrderController to show real details.
+    // If it's not registered (user came directly), we find it:
+    final orderController = Get.put(OrderController(
+      createOrderUseCase: Get.find(),
+      getOrdersUseCase: Get.find(),
+      updateOrderStatusUseCase: Get.find(),
+    ));
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('الإشعارات'),
         centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: () => notificationController.resetCount(),
-            child: const Text('تحديد الكل كمقروء', style: TextStyle(color: Colors.blue)),
-          ),
-        ],
       ),
       body: Obx(() {
-        if (notificationController.newOrdersCount.value == 0) {
+        if (orderController.isLoading.value && orderController.orders.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final authController = Get.find<AuthController>();
+        final user = authController.currentUser.value;
+        final isSupplier = user?.role == 'supplier' && !authController.isViewAsCustomer.value;
+
+        // For suppliers: pending orders
+        // For customers: accepted or delivered
+        final displayOrders = isSupplier
+             ? orderController.orders.where((o) => o.status == 'pending').toList()
+             : orderController.orders.where((o) => o.status == 'accepted' || o.status == 'delivered').toList();
+
+        if (displayOrders.isEmpty) {
           return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -37,20 +52,33 @@ class NotificationListView extends StatelessWidget {
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: notificationController.newOrdersCount.value,
+          itemCount: displayOrders.length,
           itemBuilder: (context, index) {
+            final order = displayOrders[index];
+            final customerName = order.customerName ?? 'مستخدم';
+            final avatarUrl = order.customerAvatarUrl;
+            
+            final String titleText = isSupplier
+               ? 'طلب جديد من: $customerName'
+               : 'تحديث لطلبك #${order.id.substring(0, 8)}';
+               
+            final String subtitleText = isSupplier
+               ? 'لقد أرسل لك الطلب #${order.id.substring(0, 8)}. اضغط للمراجعة التفصيلية.'
+               : (order.status == 'accepted' ? 'تمت الموافقة على طلبك بنجاح! اضغط للاتفاق بالدردشة.' : 'طلبك الآن جاهز/قيد التوصيل!');
+            
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.blue[50],
-                  child: Icon(Icons.shopping_bag_outlined, color: Colors.blue[800]),
+                  backgroundColor: Colors.blue[50], // fallback
+                  backgroundImage: (isSupplier && avatarUrl != null && avatarUrl.isNotEmpty) ? NetworkImage(avatarUrl) : null,
+                  child: (avatarUrl == null || avatarUrl.isEmpty || !isSupplier) ? Icon(isSupplier ? Icons.person : Icons.local_shipping, color: Colors.blue[800]) : null,
                 ),
-                title: const Text('طلب جديد وصل!', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('لديك طلب جديد ينتظر المراجعة. اضغط للتفاصيل.', style: TextStyle(color: Colors.grey[700])),
+                title: Text(titleText, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(subtitleText, style: TextStyle(color: Colors.grey[700])),
                 trailing: Text(
-                  DateFormat('HH:mm').format(DateTime.now()),
+                  DateFormat('HH:mm').format(order.createdAt),
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 onTap: () {

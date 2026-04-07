@@ -64,7 +64,19 @@ class OrdersView extends StatelessWidget {
                   ),
                   child: Icon(Icons.shopping_basket_outlined, color: statusColor, size: 24),
                 ),
-                title: Text('طلب #${order.id.substring(0, 8)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Row(
+                  children: [
+                    Text('طلب #${order.id.substring(0, 8)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    if (isSupplier && order.customerName != null)
+                      Expanded(
+                        child: Text(
+                          ' - من: ${order.customerName}', 
+                          style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
                 subtitle: Row(
                   children: [
                     Container(

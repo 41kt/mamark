@@ -28,6 +28,7 @@ import 'features/cart/presentation/views/cart_view.dart';
 import 'features/orders/presentation/views/orders_view.dart';
 import 'features/settings/presentation/views/settings_view.dart';
 import 'features/chat/presentation/views/chat_view.dart';
+import 'features/notifications/presentation/views/notification_list_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -92,6 +93,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/orders', page: () => const OrdersView()),
         GetPage(name: '/settings', page: () => const SettingsView()),
         GetPage(name: '/chat', page: () => const ChatView()),
+        GetPage(name: '/notifications', page: () => const NotificationListView()),
       ],
     );
   }

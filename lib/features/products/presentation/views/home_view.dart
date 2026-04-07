@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../cart/presentation/controllers/cart_controller.dart';
 import '../controllers/product_controller.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
-import '../../../notifications/presentation/controllers/notification_controller.dart';
+import '../../../orders/presentation/controllers/order_controller.dart';
 import '../widgets/product_card.dart';
 
 class HomeView extends StatelessWidget {
@@ -14,7 +14,6 @@ class HomeView extends StatelessWidget {
     final productController = Get.find<ProductController>();
     final cartController = Get.find<CartController>();
     final authController = Get.find<AuthController>();
-    final notificationController = Get.find<NotificationController>();
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -57,7 +56,13 @@ class HomeView extends StatelessWidget {
                     onPressed: () => Get.toNamed('/notifications'),
                   ),
                   Obx(() {
-                    final count = notificationController.newOrdersCount.value;
+                    final orderController = Get.find<OrderController>();
+                    final user = authController.currentUser.value;
+                    final isSupplierMode = user?.role == 'supplier' && !authController.isViewAsCustomer.value;
+                    final count = isSupplierMode
+                       ? orderController.orders.where((o) => o.status == 'pending').length
+                       : orderController.orders.where((o) => o.status == 'accepted' || o.status == 'delivered').length;
+
                     if (count == 0) return const SizedBox.shrink();
                     return Positioned(
                       right: 8,
@@ -175,7 +180,7 @@ class HomeView extends StatelessWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 0.72,
+                  childAspectRatio: 0.68,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {

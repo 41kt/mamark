@@ -9,6 +9,8 @@ class OrderModel extends OrderEntity {
     required super.totalAmount,
     required super.status,
     required super.createdAt,
+    super.customerName,
+    super.customerAvatarUrl,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,8 @@ class OrderModel extends OrderEntity {
       totalAmount: (json['total_amount'] as num).toDouble(),
       status: json['status'],
       createdAt: DateTime.parse(json['created_at']),
+      customerName: json['customer'] != null ? json['customer']['name'] : (json['users'] != null ? json['users']['name'] : null),
+      customerAvatarUrl: json['customer'] != null ? json['customer']['avatar_url'] : (json['users'] != null ? json['users']['avatar_url'] : null),
     );
   }
 

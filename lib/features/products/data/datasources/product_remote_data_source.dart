@@ -20,7 +20,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   @override
   Future<List<ProductModel>> getProducts({String? category}) async {
     try {
-      var query = supabase.from('products').select('*, users(*)');
+      var query = supabase.from('products').select('*, users!supplier_id(*)');
       if (category != null && category.isNotEmpty) {
         query = query.eq('category', category);
       }
@@ -33,11 +33,23 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   @override
   Stream<List<ProductModel>> streamProducts({String? category}) {
+    // Note: Supabase limits stream joins. To get joined data on stream, we fetch normally or rely on initial fetch.
+    // However, since we use `select` after stream if needed or simply just let getProducts do the heavy lifting:
     final streamBase = supabase.from('products').stream(primaryKey: ['id']);
+    
     if (category != null && category.isNotEmpty) {
-      return streamBase.eq('category', category).map((events) => events.map((e) => ProductModel.fromJson(e)).toList());
+      return streamBase.eq('category', category).asyncMap((events) async {
+        // Due to Supabase stream limitations with joins, we refetch fully or rely on getProducts.
+        // For strict real-time joins, we fetch manually after trigger.
+        final res = await supabase.from('products').select('*, users!supplier_id(*)').eq('category', category);
+        return res.map((e) => ProductModel.fromJson(e)).toList();
+      });
     }
-    return streamBase.map((events) => events.map((e) => ProductModel.fromJson(e)).toList());
+    
+    return streamBase.asyncMap((events) async {
+      final res = await supabase.from('products').select('*, users!supplier_id(*)');
+      return res.map((e) => ProductModel.fromJson(e)).toList();
+    });
   }
 
   @override

@@ -17,17 +17,65 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   @override
   Future<List<OrderModel>> getOrders(String userId, {bool isSupplier = false}) async {
     try {
-      final query = supabase.from('orders').select();
+      List<dynamic> response;
       if (isSupplier) {
-        query.eq('supplier_id', userId);
+        response = await supabase
+            .from('orders')
+            .select()
+            .eq('supplier_id', userId)
+            .order('created_at', ascending: false);
       } else {
-        query.eq('customer_id', userId);
+        response = await supabase
+            .from('orders')
+            .select()
+            .eq('customer_id', userId)
+            .order('created_at', ascending: false);
       }
       
-      final response = await query.order('created_at', ascending: false);
-      return (response as List).map((json) => OrderModel.fromJson(json)).toList();
+      // Manually fetch users to avoid PostgREST ambiguous foreign key errors
+      Map<String, dynamic> userMap = {};
+      try {
+        if (response.isNotEmpty) {
+           final userIds = response.map((e) => e['customer_id'].toString()).toSet().toList();
+           final usersRes = await supabase.from('users').select('id, name, avatar_url').filter('id', 'in', userIds);
+           for (var u in usersRes) {
+             userMap[u['id'].toString()] = u;
+           }
+        }
+      } catch (e) {
+        // Warning: Failed to fetch customer profiles
+      }
+
+      return response.map((json) {
+        try {
+          final cid = json['customer_id'].toString();
+          final userJson = userMap[cid];
+          return OrderModel(
+            id: json['id'] ?? '',
+            userId: json['customer_id'] ?? '',
+            supplierId: json['supplier_id'] ?? '',
+            items: List<Map<String, dynamic>>.from(json['items'] ?? []),
+            totalAmount: (json['total_amount'] as num).toDouble(),
+            status: json['status'] ?? 'pending',
+            createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
+            customerName: userJson != null ? userJson['name'] : null,
+            customerAvatarUrl: userJson != null ? userJson['avatar_url'] : null,
+          );
+        } catch (e) {
+          return OrderModel(
+            id: json['id'] ?? '',
+            userId: json['customer_id'] ?? '',
+            supplierId: json['supplier_id'] ?? '',
+            items: [],
+            totalAmount: 0.0,
+            status: 'pending',
+            createdAt: DateTime.now(),
+            customerName: 'خطأ',
+          );
+        }
+      }).toList();
     } catch (e) {
-      throw ServerFailure('Failed to fetch orders: $e');
+      throw ServerFailure('Failed to fetch orders: \$e');
     }
   }
 
@@ -55,6 +103,54 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
         .from('orders')
         .stream(primaryKey: ['id'])
         .eq('supplier_id', supplierId)
-        .map((data) => data.map((json) => OrderModel.fromJson(json)).toList());
+        .asyncMap((events) async {
+          try {
+            final res = await supabase
+                .from('orders')
+                .select()
+                .eq('supplier_id', supplierId)
+                .order('created_at', ascending: false);
+                
+            Map<String, dynamic> userMap = {};
+            if (res.isNotEmpty) {
+               final userIds = res.map((e) => e['customer_id'].toString()).toSet().toList();
+               final usersRes = await supabase.from('users').select('id, name, avatar_url').filter('id', 'in', userIds);
+               for (var u in usersRes) {
+                 userMap[u['id'].toString()] = u;
+               }
+            }
+
+            return res.map((json) {
+              try {
+                final cid = json['customer_id'].toString();
+                final userJson = userMap[cid];
+                return OrderModel(
+                  id: json['id'] ?? '',
+                  userId: json['customer_id'] ?? '',
+                  supplierId: json['supplier_id'] ?? '',
+                  items: List<Map<String, dynamic>>.from(json['items'] ?? []),
+                  totalAmount: (json['total_amount'] as num).toDouble(),
+                  status: json['status'] ?? 'pending',
+                  createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
+                  customerName: userJson != null ? userJson['name'] : null,
+                  customerAvatarUrl: userJson != null ? userJson['avatar_url'] : null,
+                );
+              } catch (_) {
+                return OrderModel(
+                  id: json['id'] ?? '',
+                  userId: json['customer_id'] ?? '',
+                  supplierId: json['supplier_id'] ?? '',
+                  items: [],
+                  totalAmount: 0.0,
+                  status: 'pending',
+                  createdAt: DateTime.now(),
+                  customerName: 'خطأ مزامنة',
+                );
+              }
+            }).toList();
+          } catch (e) {
+             return [];
+          }
+        });
   }
 }
