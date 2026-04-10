@@ -26,7 +26,9 @@ class _SplashViewState extends State<SplashView> {
       if (user == null) {
         Get.offAllNamed('/login');
       } else {
-        if (user.role == 'supplier') {
+        if (user.role == 'contractor') {
+          Get.offAllNamed('/contractor-home');
+        } else if (user.role == 'supplier') {
           Get.offAllNamed('/supplier-profile');
         } else {
           Get.offAllNamed('/home');

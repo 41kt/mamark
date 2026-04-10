@@ -56,25 +56,44 @@ class OrdersView extends StatelessWidget {
               child: ExpansionTile(
                 shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
                 collapsedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.shopping_basket_outlined, color: statusColor, size: 24),
-                ),
+                leading: order.customerAvatarUrl != null
+                    ? CircleAvatar(
+                        backgroundImage: NetworkImage(order.customerAvatarUrl!),
+                        radius: 24,
+                      )
+                    : Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.person_outline, color: statusColor, size: 24),
+                      ),
                 title: Row(
                   children: [
                     Text('طلب #${order.id.substring(0, 8)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    if (isSupplier && order.customerName != null)
+                    if (isSupplier && order.customerName != null) ...[
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          ' - من: ${order.customerName}', 
-                          style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                          order.customerName!, 
+                          style: TextStyle(color: Colors.grey[800], fontSize: 13, fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: order.customerRole == 'contractor' ? Colors.orange : Colors.blueAccent,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          order.customerRole == 'contractor' ? 'مقاول' : 'عميل',
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 subtitle: Row(
@@ -117,7 +136,20 @@ class OrdersView extends StatelessWidget {
                         children: [
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: () => orderController.updateStatus(order.id, 'accepted'),
+                              onPressed: () async {
+                                await orderController.updateStatus(order.id, 'accepted');
+                                Get.snackbar(
+                                  '✅ تم القبول',
+                                  'تم قبول الطلب بنجاح. افتح المحادثة للتواصل.',
+                                  backgroundColor: Colors.green,
+                                  colorText: Colors.white,
+                                );
+                                Get.toNamed('/chat', arguments: {
+                                  'orderId': order.id,
+                                  'isSupplier': isSupplier,
+                                  'otherUserName': order.customerName ?? 'العميل',
+                                });
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green[600],
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

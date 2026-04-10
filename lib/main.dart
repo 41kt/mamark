@@ -29,6 +29,21 @@ import 'features/orders/presentation/views/orders_view.dart';
 import 'features/settings/presentation/views/settings_view.dart';
 import 'features/chat/presentation/views/chat_view.dart';
 import 'features/notifications/presentation/views/notification_list_view.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'features/contractor/presentation/screens/contractor_main_screen.dart';
+import 'features/customer/presentation/screens/customer_main_screen.dart';
+import 'features/projects/presentation/screens/project_execution_screen.dart';
+import 'features/projects/presentation/screens/project_details_screen.dart';
+import 'features/projects/presentation/screens/my_projects_list_screen.dart';
+import 'features/projects/presentation/screens/create_project_screen.dart';
+import 'features/projects/presentation/screens/create_bid_screen.dart';
+import 'features/projects/presentation/screens/browse_projects_screen.dart';
+import 'features/projects/presentation/screens/bid_detail_screen.dart';
+import 'features/projects/presentation/screens/bids_list_screen.dart';
+import 'features/customer/presentation/screens/browse_contractors_screen.dart';
+import 'features/contractor/presentation/screens/portfolio_screen.dart';
+import 'features/contractor/presentation/screens/contractor_profile_screen.dart';
+import 'features/contractor/presentation/screens/add_portfolio_item_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,6 +109,27 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/settings', page: () => const SettingsView()),
         GetPage(name: '/chat', page: () => const ChatView()),
         GetPage(name: '/notifications', page: () => const NotificationListView()),
+        GetPage(
+          name: '/contractor-home',
+          page: () => const ProviderScope(child: ContractorMainScreen()),
+        ),
+        GetPage(
+          name: '/customer-home',
+          page: () => const ProviderScope(child: CustomerMainScreen()),
+        ),
+        GetPage(name: '/create-project', page: () => const ProviderScope(child: CreateProjectScreen())),
+        GetPage(name: '/browse-contractors', page: () => const ProviderScope(child: BrowseContractorsScreen())),
+        GetPage(name: '/contractor-profile/:id', page: () => ProviderScope(child: ContractorProfileScreen(contractorId: Get.parameters['id']!))),
+        GetPage(name: '/portfolio', page: () => const ProviderScope(child: PortfolioScreen())),
+        GetPage(name: '/add-portfolio', page: () => const ProviderScope(child: AddPortfolioItemScreen())),
+        GetPage(name: '/my-projects', page: () => const ProviderScope(child: MyProjectsListScreen())),
+        GetPage(name: '/project-details/:id', page: () => ProviderScope(child: ProjectDetailsScreen(projectId: Get.parameters['id']!))),
+        GetPage(name: '/browse-projects', page: () => const ProviderScope(child: BrowseProjectsScreen())),
+        GetPage(name: '/create-bid/:projectId', page: () => ProviderScope(child: CreateBidScreen(projectId: Get.parameters['projectId']!))),
+        GetPage(name: '/bids-list/:projectId', page: () => ProviderScope(child: BidsListScreen(projectId: Get.parameters['projectId']!))),
+        GetPage(name: '/bid-detail/:bidId', page: () => ProviderScope(child: BidDetailScreen(bidId: Get.parameters['bidId']!))),
+        GetPage(name: '/project-execution/:projectId', page: () => ProviderScope(child: ProjectExecutionScreen(projectId: Get.parameters['projectId']!))),
+        GetPage(name: '/marketplace', page: () => const HomeView()),
       ],
     );
   }

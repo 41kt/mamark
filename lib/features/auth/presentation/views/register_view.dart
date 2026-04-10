@@ -111,23 +111,35 @@ class _RegisterViewState extends State<RegisterView> {
                 const SizedBox(height: 16),
                 const Text('نوع الحساب', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
-                    Expanded(
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 72) / 3,
                       child: _buildRoleCard(
-                        title: 'مشتري',
+                        title: 'عميل',
                         icon: Icons.shopping_bag_outlined,
                         isSelected: selectedRole == 'customer',
                         onTap: () => setState(() => selectedRole = 'customer'),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 72) / 3,
                       child: _buildRoleCard(
                         title: 'مورد',
                         icon: Icons.storefront_outlined,
                         isSelected: selectedRole == 'supplier',
                         onTap: () => setState(() => selectedRole = 'supplier'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 72) / 3,
+                      child: _buildRoleCard(
+                        title: 'مقاول',
+                        icon: Icons.construction_outlined,
+                        isSelected: selectedRole == 'contractor',
+                        onTap: () => setState(() => selectedRole = 'contractor'),
                       ),
                     ),
                   ],

@@ -11,6 +11,7 @@ class OrderModel extends OrderEntity {
     required super.createdAt,
     super.customerName,
     super.customerAvatarUrl,
+    super.customerRole,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +25,7 @@ class OrderModel extends OrderEntity {
       createdAt: DateTime.parse(json['created_at']),
       customerName: json['customer'] != null ? json['customer']['name'] : (json['users'] != null ? json['users']['name'] : null),
       customerAvatarUrl: json['customer'] != null ? json['customer']['avatar_url'] : (json['users'] != null ? json['users']['avatar_url'] : null),
+      customerRole: json['customer'] != null ? json['customer']['role'] : (json['users'] != null ? json['users']['role'] : null),
     );
   }
 

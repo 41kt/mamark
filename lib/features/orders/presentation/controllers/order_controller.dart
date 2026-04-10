@@ -5,6 +5,7 @@ import 'package:mamark/features/orders/domain/repositories/order_repository.dart
 import 'package:mamark/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:mamark/features/cart/presentation/controllers/cart_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrderController extends GetxController {
   final CreateOrderUseCase createOrderUseCase;
@@ -117,6 +118,30 @@ class OrderController extends GetxController {
         result.fold(
           (failure) => Get.snackbar('خطأ', failure.message, backgroundColor: Colors.red[200]),
           (_) async {
+            // ── تخفيض المخزون تلقائياً بعد نجاح الطلب ──
+            try {
+              final supabase = Get.find<SupabaseClient>();
+              for (final item in supplierGroups[sId]!) {
+                final productId = item['product_id'];
+                final orderedQty = (item['quantity'] as int? ?? 1);
+                // Get current inventory row for this product
+                final invResult = await supabase
+                    .from('inventory')
+                    .select('id, quantity_available, quantity_sold')
+                    .eq('product_id', productId)
+                    .maybeSingle();
+                if (invResult != null) {
+                  final currentAvail = (invResult['quantity_available'] as int? ?? 0);
+                  final currentSold = (invResult['quantity_sold'] as int? ?? 0);
+                  await supabase.from('inventory').update({
+                    'quantity_available': (currentAvail - orderedQty).clamp(0, 999999),
+                    'quantity_sold': currentSold + orderedQty,
+                  }).eq('id', invResult['id']);
+                }
+              }
+            } catch (_) {
+              // Non-critical: inventory update failed silently
+            }
             await cartController.clear(user.id);
             Get.snackbar('نجاح', 'تم إرسال الطلب بنجاح', backgroundColor: Colors.green[200]);
             refreshOrders();
@@ -155,9 +180,10 @@ class OrderController extends GetxController {
         final newlyAdded = newOrders.where((o) => !existingIds.contains(o.id)).toList();
         
         for (var order in newlyAdded) {
+          final roleStr = order.customerRole == 'contractor' ? 'مقاول' : 'عميل';
           Get.snackbar(
-            'طلب جديد!',
-            'وصلك طلب جديد برقم ${order.id.substring(0, 8)}',
+            'طلب جديد من $roleStr!',
+            'وصلك طلب جديد برقم ${order.id.substring(0, 8)} من ${order.customerName ?? "مستخدم"}',
             backgroundColor: Colors.blue[100],
             duration: const Duration(seconds: 5),
             mainButton: TextButton(

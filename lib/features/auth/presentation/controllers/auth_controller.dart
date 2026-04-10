@@ -92,7 +92,11 @@ class AuthController extends GetxController {
       },
       (user) {
         currentUser.value = user;
-        Get.offAllNamed('/home');
+        if (user.role == 'contractor') {
+          Get.offAllNamed('/contractor-home');
+        } else {
+          Get.offAllNamed('/home');
+        }
       },
     );
     isLoading.value = false;
@@ -143,7 +147,11 @@ class AuthController extends GetxController {
       },
       (user) {
         currentUser.value = user;
-        Get.offAllNamed('/home');
+        if (user.role == 'contractor') {
+          Get.offAllNamed('/contractor-home');
+        } else {
+          Get.offAllNamed('/home');
+        }
         Get.snackbar('نجاح', 'تم إنشاء الحساب بنجاح', backgroundColor: Colors.green[200]);
       },
     );

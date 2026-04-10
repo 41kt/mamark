@@ -37,7 +37,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       try {
         if (response.isNotEmpty) {
            final userIds = response.map((e) => e['customer_id'].toString()).toSet().toList();
-           final usersRes = await supabase.from('users').select('id, name, avatar_url').filter('id', 'in', userIds);
+           final usersRes = await supabase.from('users').select('id, name, avatar_url, role').filter('id', 'in', userIds);
            for (var u in usersRes) {
              userMap[u['id'].toString()] = u;
            }
@@ -60,6 +60,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
             createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
             customerName: userJson != null ? userJson['name'] : null,
             customerAvatarUrl: userJson != null ? userJson['avatar_url'] : null,
+            customerRole: userJson != null ? userJson['role'] : null,
           );
         } catch (e) {
           return OrderModel(
@@ -114,7 +115,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
             Map<String, dynamic> userMap = {};
             if (res.isNotEmpty) {
                final userIds = res.map((e) => e['customer_id'].toString()).toSet().toList();
-               final usersRes = await supabase.from('users').select('id, name, avatar_url').filter('id', 'in', userIds);
+               final usersRes = await supabase.from('users').select('id, name, avatar_url, role').filter('id', 'in', userIds);
                for (var u in usersRes) {
                  userMap[u['id'].toString()] = u;
                }
@@ -134,6 +135,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
                   createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
                   customerName: userJson != null ? userJson['name'] : null,
                   customerAvatarUrl: userJson != null ? userJson['avatar_url'] : null,
+                  customerRole: userJson != null ? userJson['role'] : null,
                 );
               } catch (_) {
                 return OrderModel(

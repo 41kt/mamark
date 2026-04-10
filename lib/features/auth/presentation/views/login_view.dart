@@ -54,14 +54,24 @@ class LoginView extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Obx(() => _buildRoleCard(
-                        title: 'أنا مشتري',
-                        icon: Icons.shopping_bag_outlined,
+                        title: 'أنا عميل',
+                        icon: Icons.person_outline,
                         isSelected: selectedRole.value == 'customer',
                         onTap: () => selectedRole.value = 'customer',
                         color: Colors.blue,
                       )),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(() => _buildRoleCard(
+                        title: 'أنا مقاول',
+                        icon: Icons.construction_outlined,
+                        isSelected: selectedRole.value == 'contractor',
+                        onTap: () => selectedRole.value = 'contractor',
+                        color: Colors.green,
+                      )),
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Obx(() => _buildRoleCard(
                         title: 'أنا مورد',

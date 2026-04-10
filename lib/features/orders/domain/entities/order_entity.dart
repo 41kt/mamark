@@ -10,6 +10,7 @@ class OrderEntity extends Equatable {
   final DateTime createdAt;
   final String? customerName;
   final String? customerAvatarUrl;
+  final String? customerRole;
 
   const OrderEntity({
     required this.id,
@@ -21,8 +22,9 @@ class OrderEntity extends Equatable {
     required this.createdAt,
     this.customerName,
     this.customerAvatarUrl,
+    this.customerRole,
   });
 
   @override
-  List<Object?> get props => [id, userId, supplierId, items, totalAmount, status, createdAt, customerName, customerAvatarUrl];
+  List<Object?> get props => [id, userId, supplierId, items, totalAmount, status, createdAt, customerName, customerAvatarUrl, customerRole];
 }
